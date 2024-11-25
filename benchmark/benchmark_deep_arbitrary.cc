@@ -34,22 +34,30 @@ using std::endl;
 using std::string;
 using std::to_string;
 using std::vector;
-
+void write_to_csv(const DataWrapper &data_wrapper,
+                  const std::vector<int> &search_ef_list,
+                  const std::map<int, std::map<int, std::pair<float, float>>> &result_recorder,
+                  const std::map<int, std::map<int, float>> &comparison_recorder,
+                  const std::map<int, std::map<int, float>> &hop_recorder);
 void log_result_recorder(
     const std::map<int, std::pair<float, float>> &result_recorder,
-    const std::map<int, float> &comparison_recorder, const int amount) {
-  for (auto it : result_recorder) {
+    const std::map<int, float> &comparison_recorder, const std::map<int, float> &hop_recorder, const int amount)
+{
+  for (auto it : result_recorder)
+  {
     cout << std::setiosflags(ios::fixed) << std::setprecision(4)
          << "range: " << it.first
          << "\t recall: " << it.second.first / (amount / result_recorder.size())
          << "\t QPS: " << std::setprecision(0)
          << (amount / result_recorder.size()) / it.second.second << "\t Comps: "
-         << comparison_recorder.at(it.first) / (amount / result_recorder.size())
+         << comparison_recorder.at(it.first) / (amount / result_recorder.size()) << "\t Hops: "
+         << hop_recorder.at(it.first) / (amount / result_recorder.size())
          << endl;
   }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 #ifdef USE_SSE
   cout << "Use SSE" << endl;
 #endif
@@ -65,15 +73,15 @@ int main(int argc, char **argv) {
 
   // Parameters
   string dataset = "deep";
-  int data_size = 100000;
+  int data_size = 1000000;
   string dataset_path = "";
   string method = "";
   string query_path = "";
   string groundtruth_path = "";
-  vector<int> index_k_list = {8};
-  vector<int> ef_construction_list = {100};
+  vector<int> index_k_list = {16};
+  vector<int> ef_construction_list = {256};
   int query_num = 1000;
-  int query_k = 10;
+  int query_k = 100;
   vector<int> ef_max_list = {500};
 
   string indexk_str = "";
@@ -81,15 +89,22 @@ int main(int argc, char **argv) {
   // string ef_max_str = "";
   string version = "Benchmark";
 
-  for (int i = 0; i < argc; i++) {
+  for (int i = 0; i < argc; i++)
+  {
     string arg = argv[i];
-    if (arg == "-dataset") dataset = string(argv[i + 1]);
-    if (arg == "-N") data_size = atoi(argv[i + 1]);
-    if (arg == "-dataset_path") dataset_path = string(argv[i + 1]);
-    if (arg == "-query_path") query_path = string(argv[i + 1]);
-    if (arg == "-groundtruth_path") groundtruth_path = string(argv[i + 1]);
+    if (arg == "-dataset")
+      dataset = string(argv[i + 1]);
+    if (arg == "-N")
+      data_size = atoi(argv[i + 1]);
+    if (arg == "-dataset_path")
+      dataset_path = string(argv[i + 1]);
+    if (arg == "-query_path")
+      query_path = string(argv[i + 1]);
+    if (arg == "-groundtruth_path")
+      groundtruth_path = string(argv[i + 1]);
     // if (arg == "-ef_max") ef_max_str = string(argv[i + 1]);
-    if (arg == "-method") method = string(argv[i + 1]);
+    if (arg == "-method")
+      method = string(argv[i + 1]);
   }
 
   assert(index_k_list.size() != 0);
@@ -98,7 +113,7 @@ int main(int argc, char **argv) {
 
   DataWrapper data_wrapper(query_num, query_k, dataset, data_size);
   data_wrapper.readData(dataset_path, query_path);
-
+  data_wrapper.frac_num = 1;
   // Generate groundtruth
   data_wrapper.generateRangeFilteringQueriesAndGroundtruthBenchmark(false);
   // Or you can load groundtruth from the given path
@@ -106,7 +121,9 @@ int main(int argc, char **argv) {
 
   assert(data_wrapper.query_ids.size() == data_wrapper.query_ranges.size());
 
-  vector<int> searchef_para_range_list = {16, 64, 256};
+  // vector<int> searchef_para_range_list = {16, 64, 256};
+  // vector<int> searchef_para_range_list = {700, 500, 300, 250, 200, 180, 160, 140, 120, 100, 90, 80, 70, 60};
+  vector<int> searchef_para_range_list = {1700, 1500, 1300, 1100, 1000, 900, 800, 700, 600, 500, 400, 300, 250, 200, 180, 160, 140, 120, 100, 90, 80, 70, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10};
 
   cout << "index K:" << endl;
   print_set(index_k_list);
@@ -121,9 +138,12 @@ int main(int argc, char **argv) {
 
   timeval t1, t2;
 
-  for (unsigned index_k : index_k_list) {
-    for (unsigned ef_max : ef_max_list) {
-      for (unsigned ef_construction : ef_construction_list) {
+  for (unsigned index_k : index_k_list)
+  {
+    for (unsigned ef_max : ef_max_list)
+    {
+      for (unsigned ef_construction : ef_construction_list)
+      {
         BaseIndex::IndexParams i_params(index_k, ef_construction,
                                         ef_construction, ef_max);
         {
@@ -150,13 +170,18 @@ int main(int argc, char **argv) {
             timeval tt3, tt4;
             BaseIndex::SearchParams s_params;
             s_params.query_K = data_wrapper.query_k;
-            for (auto one_searchef : searchef_para_range_list) {
+            std::map<int, std::map<int, std::pair<float, float>>>
+                result_recorder; // first->precision, second->query_time
+            std::map<int, std::map<int, float>> comparison_recorder;
+            std::map<int, std::map<int, float>> hop_recorder;
+            for (auto one_searchef : searchef_para_range_list)
+            {
               s_params.search_ef = one_searchef;
-              std::map<int, std::pair<float, float>>
-                  result_recorder;  // first->precision, second->query_time
-              std::map<int, float> comparison_recorder;
+
               gettimeofday(&tt3, NULL);
-              for (int idx = 0; idx < data_wrapper.query_ids.size(); idx++) {
+              for (int idx = 0; idx < data_wrapper.query_ids.size(); idx++)
+              {
+                // cout << data_wrapper.query_fracs.at(idx) << ",";
                 int one_id = data_wrapper.query_ids.at(idx);
                 s_params.query_range =
                     data_wrapper.query_ranges.at(idx).second -
@@ -166,22 +191,25 @@ int main(int argc, char **argv) {
                     data_wrapper.query_ranges.at(idx));
                 search_info.precision =
                     countPrecision(data_wrapper.groundtruth.at(idx), res);
-                result_recorder[s_params.query_range].first +=
+                result_recorder[data_wrapper.query_fracs.at(idx)][s_params.search_ef].first +=
                     search_info.precision;
-                result_recorder[s_params.query_range].second +=
+                result_recorder[data_wrapper.query_fracs.at(idx)][s_params.search_ef].second +=
                     search_info.internal_search_time;
-                comparison_recorder[s_params.query_range] +=
+                comparison_recorder[data_wrapper.query_fracs.at(idx)][s_params.search_ef] +=
                     search_info.total_comparison;
+                hop_recorder[data_wrapper.query_fracs.at(idx)][s_params.search_ef] +=
+                    search_info.total_hop;
               }
 
               cout << endl
-                   << "Search ef: " << one_searchef << endl
-                   << "========================" << endl;
-              log_result_recorder(result_recorder, comparison_recorder,
-                                  data_wrapper.query_ids.size());
-              cout << "========================" << endl;
+                   << "Search ef: " << one_searchef << endl;
+              //  << "========================" << endl;
+              // log_result_recorder(result_recorder, comparison_recorder, hop_recorder,
+              //                     data_wrapper.query_ids.size());
+              // cout << "========================" << endl;
               logTime(tt3, tt4, "total query time");
             }
+            write_to_csv(data_wrapper, searchef_para_range_list, result_recorder, comparison_recorder, hop_recorder);
           }
         }
       }
@@ -189,4 +217,44 @@ int main(int argc, char **argv) {
   }
 
   return 0;
+}
+
+void write_to_csv(const DataWrapper &data_wrapper,
+                  const std::vector<int> &search_ef_list,
+                  const std::map<int, std::map<int, std::pair<float, float>>> &result_recorder,
+                  const std::map<int, std::map<int, float>> &comparison_recorder,
+                  const std::map<int, std::map<int, float>> &hop_recorder)
+{
+  for (const auto &range_entry : result_recorder)
+  {
+    int range = range_entry.first; // 当前range
+    std::string filename = "/root/SeRF/exp/result/serf_" + std::to_string(range) + ".csv";
+
+    std::ofstream file(filename);
+    // file << "search_ef,fa,fb,fc,fd\n";
+
+    for (auto search_ef : search_ef_list)
+    {
+      auto result_it = range_entry.second.find(search_ef);
+      auto comparison_it = comparison_recorder.at(range).find(search_ef);
+      auto hop_it = hop_recorder.at(range).find(search_ef);
+
+      if (result_it != range_entry.second.end() &&
+          comparison_it != comparison_recorder.at(range).end() &&
+          hop_it != hop_recorder.at(range).end())
+      {
+        // cout << "data_wrapper.query_ids.size(): " << data_wrapper.query_ids.size() << endl;
+        // cout << "data_wrapper.frac_num: " << data_wrapper.frac_num << endl;
+        float recall = (result_it->second.first) / (float)(data_wrapper.query_ids.size() / (data_wrapper.frac_num));
+        float qps = (data_wrapper.query_ids.size() / (data_wrapper.frac_num)) / (result_it->second.second);
+        float comp = (comparison_it->second) / (float)(data_wrapper.query_ids.size() / (data_wrapper.frac_num));
+        float hop = (hop_it->second) / (float)(data_wrapper.query_ids.size() / (data_wrapper.frac_num));
+
+        file << search_ef << "," << recall << "," << qps << "," << comp << "," << hop << "\n";
+      }
+    }
+
+    file.close();
+    std::cout << "Generated CSV for range " << range << " at " << filename << std::endl;
+  }
 }
