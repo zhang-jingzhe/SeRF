@@ -3,7 +3,8 @@
 #include <assert.h>
 
 using std::vector;
-FvecsItrReader::FvecsItrReader(std::string filename) {
+FvecsItrReader::FvecsItrReader(std::string filename)
+{
   ifs.open(filename, std::ios::binary);
   assert(ifs.is_open());
   Next();
@@ -11,22 +12,27 @@ FvecsItrReader::FvecsItrReader(std::string filename) {
 
 bool FvecsItrReader::IsEnd() { return eof_flag; }
 
-std::vector<float> FvecsItrReader::Next() {
-  std::vector<float> prev_vec = vec;  // return the currently stored vec
+std::vector<float> FvecsItrReader::Next()
+{
+  std::vector<float> prev_vec = vec; // return the currently stored vec
   int D;
-  if (ifs.read((char *)&D, sizeof(int))) {  // read "D"
+  if (ifs.read((char *)&D, sizeof(int)))
+  { // read "D"
     // Then, read a D-dim vec
-    vec.resize(D);                                    // allocate D-dim
-    ifs.read((char *)vec.data(), sizeof(float) * D);  // Read D * float.
+    vec.resize(D);                                   // allocate D-dim
+    ifs.read((char *)vec.data(), sizeof(float) * D); // Read D * float.
     eof_flag = false;
-  } else {
+  }
+  else
+  {
     vec.clear();
     eof_flag = true;
   }
   return prev_vec;
 }
 
-BvecsItrReader::BvecsItrReader(std::string filename) {
+BvecsItrReader::BvecsItrReader(std::string filename)
+{
   ifs.open(filename, std::ios::binary);
   assert(ifs.is_open());
   Next();
@@ -34,36 +40,47 @@ BvecsItrReader::BvecsItrReader(std::string filename) {
 
 bool BvecsItrReader::IsEnd() { return eof_flag; }
 
-std::vector<float> BvecsItrReader::Next() {
-  std::vector<float> prev_vec = vec;  // return the currently stored vec
+std::vector<float> BvecsItrReader::Next()
+{
+  std::vector<float> prev_vec = vec; // return the currently stored vec
   int D;
-  if (ifs.read((char *)&D, sizeof(int))) {  // read "D"
+  if (ifs.read((char *)&D, sizeof(int)))
+  { // read "D"
     // Then, read a D-dim vec
-    vec.resize(D);  // allocate D-dim
+    vec.resize(D); // allocate D-dim
     std::vector<unsigned char> buff(D);
 
     assert(ifs.read((char *)buff.data(),
-                    sizeof(unsigned char) * D));  // Read D * uchar.
+                    sizeof(unsigned char) * D)); // Read D * uchar.
 
     // Convert uchar to float
-    for (int d = 0; d < D; ++d) {
+    for (int d = 0; d < D; ++d)
+    {
       vec[d] = static_cast<float>(buff[d]);
     }
 
     eof_flag = false;
-  } else {
+  }
+  else
+  {
     vec.clear();
     eof_flag = true;
   }
   return prev_vec;
 }
 
-ItrReader::ItrReader(std::string filename, std::string ext) {
-  if (ext == "fvecs") {
+ItrReader::ItrReader(std::string filename, std::string ext)
+{
+  if (ext == "fvecs")
+  {
     m_reader = (I_ItrReader *)new FvecsItrReader(filename);
-  } else if (ext == "bvecs") {
+  }
+  else if (ext == "bvecs")
+  {
     m_reader = (I_ItrReader *)new BvecsItrReader(filename);
-  } else {
+  }
+  else
+  {
     std::cerr << "Error: strange ext type: " << ext << "in ItrReader"
               << std::endl;
     exit(1);
@@ -77,14 +94,18 @@ bool ItrReader::IsEnd() { return m_reader->IsEnd(); }
 std::vector<float> ItrReader::Next() { return m_reader->Next(); }
 
 std::vector<std::vector<float>> ReadTopN(std::string filename, std::string ext,
-                                         int top_n) {
+                                         int top_n)
+{
   std::vector<std::vector<float>> vecs;
-  if (top_n != -1) {
+  if (top_n != -1)
+  {
     vecs.reserve(top_n);
   }
   ItrReader reader(filename, ext);
-  while (!reader.IsEnd()) {
-    if (top_n != -1 && top_n <= (int)vecs.size()) {
+  while (!reader.IsEnd())
+  {
+    if (top_n != -1 && top_n <= (int)vecs.size())
+    {
       break;
     }
     vecs.emplace_back(reader.Next());
@@ -100,7 +121,8 @@ std::vector<std::vector<float>> ReadTopN(std::string filename, std::string ext,
 /// @param num_dimensions dimension of dataset
 void ReadFvecsTopN(const std::string &file_path,
                    std::vector<std::vector<float>> &data, const uint32_t N,
-                   const int num_dimensions) {
+                   const int num_dimensions)
+{
   std::cout << "Reading Data: " << file_path << std::endl;
   std::ifstream ifs;
   ifs.open(file_path, std::ios::binary);
@@ -110,9 +132,11 @@ void ReadFvecsTopN(const std::string &file_path,
   std::vector<double> buff(num_dimensions);
   int counter = 0;
   while ((counter < N) &&
-         (ifs.read((char *)buff.data(), num_dimensions * sizeof(double)))) {
+         (ifs.read((char *)buff.data(), num_dimensions * sizeof(double))))
+  {
     std::vector<float> row(num_dimensions);
-    for (int d = 0; d < num_dimensions; d++) {
+    for (int d = 0; d < num_dimensions; d++)
+    {
       row[d] = static_cast<float>(buff[d]);
     }
     data[counter++] = std::move(row);
@@ -130,7 +154,8 @@ void ReadFvecsTopN(const std::string &file_path,
 /// @param num_dimensions dimension of dataset
 void ReadFvecsSkipTop(const std::string &file_path,
                       std::vector<std::vector<float>> &data, const uint32_t N,
-                      const int num_dimensions, const int skip_num) {
+                      const int num_dimensions, const int skip_num)
+{
   std::cout << "Query Start From Position: " << skip_num << std::endl;
   std::ifstream ifs;
   ifs.open(file_path, std::ios::binary);
@@ -141,9 +166,11 @@ void ReadFvecsSkipTop(const std::string &file_path,
   std::vector<double> buff(num_dimensions);
   int counter = 0;
   while ((counter < N) &&
-         ifs.read((char *)buff.data(), num_dimensions * sizeof(double))) {
+         ifs.read((char *)buff.data(), num_dimensions * sizeof(double)))
+  {
     std::vector<float> row(num_dimensions);
-    for (int d = 0; d < num_dimensions; d++) {
+    for (int d = 0; d < num_dimensions; d++)
+    {
       row[d] = static_cast<float>(buff[d]);
     }
     data[counter++] = std::move(row);
@@ -159,7 +186,8 @@ void ReadFvecsSkipTop(const std::string &file_path,
 /// @param num_dimensions dimension of dataset
 void ReadIvecsTopN(const std::string &file_path, std::vector<int> &keys,
                    const uint32_t N, const int num_dimensions,
-                   const int position) {
+                   const int position)
+{
   std::cout << "Reading Keys: " << file_path << std::endl;
   std::ifstream ifs;
   ifs.open(file_path, std::ios::binary);
@@ -169,7 +197,8 @@ void ReadIvecsTopN(const std::string &file_path, std::vector<int> &keys,
   std::vector<uint64_t> buff(num_dimensions);
   int counter = 0;
   while ((counter < N) &&
-         ifs.read((char *)buff.data(), num_dimensions * sizeof(uint64_t))) {
+         ifs.read((char *)buff.data(), num_dimensions * sizeof(uint64_t)))
+  {
     keys[counter++] = static_cast<uint64_t>(buff[position]);
   }
 
@@ -179,25 +208,43 @@ void ReadIvecsTopN(const std::string &file_path, std::vector<int> &keys,
 
 void ReadDataWrapper(vector<vector<float>> &raw_data, vector<int> &search_keys,
                      const string &dataset, string &dataset_path,
-                     const int item_num) {
+                     const int item_num)
+{
   raw_data.clear();
-  if (dataset == "glove") {
+  if (dataset == "glove")
+  {
     ReadMatFromTxtTwitter(dataset_path, raw_data, item_num);
-  } else if (dataset == "ml25m") {
+  }
+  else if (dataset == "ml25m")
+  {
     ReadMatFromTxt(dataset_path, raw_data, item_num);
-  } else if (dataset == "sift") {
+  }
+  else if (dataset == "sift")
+  {
     raw_data = ReadTopN(dataset_path, "bvecs", item_num);
-  } else if (dataset == "biggraph") {
+  }
+  else if (dataset == "biggraph")
+  {
     ReadMatFromTsv(dataset_path, raw_data, item_num);
-  } else if (dataset == "local") {
+  }
+  else if (dataset == "local")
+  {
     raw_data = ReadTopN(dataset_path, "fvecs", item_num);
-  } else if (dataset == "deep") {
+  }
+  else if (dataset == "deep")
+  {
     raw_data = ReadTopN(dataset_path, "fvecs", item_num);
-  } else if (dataset == "deep10m") {
+  }
+  else if (dataset == "deep10m")
+  {
     raw_data = ReadTopN(dataset_path, "fvecs", item_num);
-  } else if (dataset == "yt8m") {
+  }
+  else if (dataset == "yt8m")
+  {
     ReadMatFromTsvYT8M(dataset_path, raw_data, search_keys, item_num);
-  } else {
+  }
+  else
+  {
     std::cerr << "Wrong Datset!" << endl;
     assert(false);
   }
@@ -207,69 +254,95 @@ void ReadDataWrapper(vector<vector<float>> &raw_data, vector<int> &search_keys,
 void ReadDataWrapper(const string &dataset, string &dataset_path,
                      vector<vector<float>> &raw_data, const int data_size,
                      string &query_path, vector<vector<float>> &querys,
-                     const int query_size, vector<int> &search_keys) {
+                     const int query_size, vector<int> &search_keys)
+{
   raw_data.clear();
   if (dataset == "glove" || dataset == "glove25" || dataset == "glove50" ||
-      dataset == "glove100" || dataset == "glove200") {
+      dataset == "glove100" || dataset == "glove200")
+  {
     ReadMatFromTxtTwitter(dataset_path, raw_data, data_size);
-  } else if (dataset == "ml25m") {
+  }
+  else if (dataset == "ml25m")
+  {
     ReadMatFromTxt(dataset_path, raw_data, data_size);
-  } else if (dataset == "sift") {
+  }
+  else if (dataset == "sift")
+  {
     raw_data = ReadTopN(dataset_path, "bvecs", data_size);
     querys = ReadTopN(query_path, "bvecs", query_size);
-  } else if (dataset == "biggraph") {
+  }
+  else if (dataset == "biggraph")
+  {
     ReadMatFromTsv(dataset_path, raw_data, data_size);
-  } else if (dataset == "local") {
+  }
+  else if (dataset == "local")
+  {
     cout << dataset_path << endl;
     raw_data = ReadTopN(dataset_path, "fvecs", data_size);
-  } else if (dataset == "deep") {
+  }
+  else if (dataset == "deep")
+  {
     raw_data = ReadTopN(dataset_path, "fvecs", data_size);
     querys = ReadTopN(query_path, "fvecs", query_size);
-  } else if (dataset == "deep10m") {
+  }
+  else if (dataset == "deep10m")
+  {
     raw_data = ReadTopN(dataset_path, "fvecs", data_size);
-  } else if (dataset == "yt8m") {
+  }
+  else if (dataset == "yt8m")
+  {
     ReadMatFromTsvYT8M(dataset_path, raw_data, search_keys, data_size);
-  } else if (dataset == "yt8m-video") {
+  }
+  else if (dataset == "yt8m-video")
+  {
     ReadFvecsTopN(dataset_path, raw_data, data_size, 1024);
     ReadFvecsTopN(query_path, querys, query_size, 1024);
-  } else if (dataset == "yt8m-audio") {
+  }
+  else if (dataset == "yt8m-audio")
+  {
     ReadFvecsTopN(dataset_path, raw_data, data_size, 128);
     ReadFvecsTopN(query_path, querys, query_size, 128);
-
-  } else if (dataset == "wiki-image") {
+  }
+  else if (dataset == "wiki-image")
+  {
     ReadFvecsTopN(dataset_path, raw_data, data_size, 2048);
     ReadFvecsTopN(query_path, querys, query_size, 2048);
-
   }
 
-  else {
+  else
+  {
     std::cerr << "Wrong Datset!" << endl;
     assert(false);
   }
 }
 
-void Split(std::string &s, std::string &delim, std::vector<std::string> *ret) {
+void Split(std::string &s, std::string &delim, std::vector<std::string> *ret)
+{
   size_t last = 0;
   size_t index = s.find_first_of(delim, last);
-  while (index != std::string::npos) {
+  while (index != std::string::npos)
+  {
     ret->push_back(s.substr(last, index - last));
     last = index + 1;
     index = s.find_first_of(delim, last);
   }
-  if (index - last > 0) {
+  if (index - last > 0)
+  {
     ret->push_back(s.substr(last, index - last));
   }
 }
 
 // load txt matrix data
 void ReadMatFromTxt(const string &path, vector<vector<float>> &data,
-                    const int length_limit = -1) {
+                    const int length_limit = -1)
+{
   ifstream infile;
   string bline;
   string delim = " ";
   int numCols = 0;
   infile.open(path, ios::in);
-  if (getline(infile, bline, '\n')) {
+  if (getline(infile, bline, '\n'))
+  {
     vector<string> ret;
     Split(bline, delim, &ret);
     numCols = ret.size();
@@ -279,18 +352,22 @@ void ReadMatFromTxt(const string &path, vector<vector<float>> &data,
   // cout << "# of columns: " << numCols << endl;
 
   int counter = 0;
-  if (length_limit == -1) counter = -9999999;
+  if (length_limit == -1)
+    counter = -9999999;
   // TODO: read sparse matrix
   infile.open(path, ios::in);
-  while (getline(infile, bline, '\n')) {
-    if (counter >= length_limit) break;
+  while (getline(infile, bline, '\n'))
+  {
+    if (counter >= length_limit)
+      break;
     counter++;
 
     vector<string> ret;
     Split(bline, delim, &ret);
     vector<float> arow(numCols);
     assert(ret.size() == numCols);
-    for (int i = 0; i < ret.size(); i++) {
+    for (int i = 0; i < ret.size(); i++)
+    {
       arow[i] = static_cast<float>(stod(ret[i]));
     }
     data.emplace_back(arow);
@@ -300,13 +377,15 @@ void ReadMatFromTxt(const string &path, vector<vector<float>> &data,
 }
 
 void ReadMatFromTxtTwitter(const string &path, vector<vector<float>> &data,
-                           const int length_limit = -1) {
+                           const int length_limit = -1)
+{
   ifstream infile;
   string bline;
   string delim = " ";
   int numCols = 0;
   infile.open(path, ios::in);
-  if (getline(infile, bline, '\n')) {
+  if (getline(infile, bline, '\n'))
+  {
     vector<string> ret;
     Split(bline, delim, &ret);
     numCols = ret.size() - 1;
@@ -317,18 +396,22 @@ void ReadMatFromTxtTwitter(const string &path, vector<vector<float>> &data,
   cout << "# of columns: " << numCols << endl;
 
   int counter = 0;
-  if (length_limit == -1) counter = -9999999;
+  if (length_limit == -1)
+    counter = -9999999;
   // TODO: read sparse matrix
   infile.open(path, ios::in);
-  while (getline(infile, bline, '\n')) {
-    if (counter >= length_limit) break;
+  while (getline(infile, bline, '\n'))
+  {
+    if (counter >= length_limit)
+      break;
     counter++;
 
     vector<string> ret;
     Split(bline, delim, &ret);
     vector<float> arow(numCols);
     assert(ret.size() == numCols + 1);
-    for (int i = 1; i < ret.size(); i++) {
+    for (int i = 1; i < ret.size(); i++)
+    {
       arow[i - 1] = static_cast<float>(stod(ret[i]));
     }
     data.emplace_back(arow);
@@ -338,14 +421,16 @@ void ReadMatFromTxtTwitter(const string &path, vector<vector<float>> &data,
 }
 
 void ReadMatFromTsv(const string &path, vector<vector<float>> &data,
-                    const int length_limit = -1) {
+                    const int length_limit = -1)
+{
   ifstream infile;
   string bline;
   string delim = "\t";
   int numCols = 0;
   infile.open(path, ios::in);
   getline(infile, bline, '\n');
-  if (getline(infile, bline, '\n')) {
+  if (getline(infile, bline, '\n'))
+  {
     vector<string> ret;
     Split(bline, delim, &ret);
     numCols = ret.size();
@@ -355,19 +440,23 @@ void ReadMatFromTsv(const string &path, vector<vector<float>> &data,
   cout << "# of columns: " << numCols << endl;
 
   int counter = 0;
-  if (length_limit == -1) counter = -9999999;
+  if (length_limit == -1)
+    counter = -9999999;
   infile.open(path, ios::in);
   // skip the first line
   getline(infile, bline, '\n');
-  while (getline(infile, bline, '\n')) {
-    if (counter >= length_limit) break;
+  while (getline(infile, bline, '\n'))
+  {
+    if (counter >= length_limit)
+      break;
     counter++;
 
     vector<string> ret;
     Split(bline, delim, &ret);
     vector<float> arow(numCols - 1);
     assert(ret.size() == numCols);
-    for (int i = 0; i < ret.size() - 1; i++) {
+    for (int i = 0; i < ret.size() - 1; i++)
+    {
       arow[i] = static_cast<float>(stod(ret[i + 1]));
     }
     data.emplace_back(arow);
@@ -376,9 +465,11 @@ void ReadMatFromTsv(const string &path, vector<vector<float>> &data,
   cout << "# of rows: " << data.size() << endl;
 }
 
-int YT8M2Int(const string id) {
+int YT8M2Int(const string id)
+{
   int res = 0;
-  for (size_t i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 4; i++)
+  {
     res *= 100;
     res += (int)id[i] - 38;
   }
@@ -386,14 +477,16 @@ int YT8M2Int(const string id) {
 }
 
 void ReadMatFromTsvYT8M(const string &path, vector<vector<float>> &data,
-                        vector<int> &search_keys, const int length_limit) {
+                        vector<int> &search_keys, const int length_limit)
+{
   ifstream infile;
   string bline;
   string delim = ",";
   int numCols = 0;
   infile.open(path, ios::in);
   getline(infile, bline, '\n');
-  if (getline(infile, bline, '\n')) {
+  if (getline(infile, bline, '\n'))
+  {
     vector<string> ret;
     Split(bline, delim, &ret);
     numCols = ret.size();
@@ -403,12 +496,15 @@ void ReadMatFromTsvYT8M(const string &path, vector<vector<float>> &data,
   cout << "# of columns: " << numCols << endl;
 
   int counter = 0;
-  if (length_limit == -1) counter = -9999999;
+  if (length_limit == -1)
+    counter = -9999999;
   infile.open(path, ios::in);
   string delim_embed = " ";
 
-  while (getline(infile, bline, '\n')) {
-    if (counter >= length_limit) break;
+  while (getline(infile, bline, '\n'))
+  {
+    if (counter >= length_limit)
+      break;
     counter++;
 
     vector<string> ret;
@@ -425,7 +521,8 @@ void ReadMatFromTsvYT8M(const string &path, vector<vector<float>> &data,
     vector<float> arow(1024);
     Split(embedding_str, delim_embed, &embedding_vec);
     assert(embedding_vec.size() == 1024);
-    for (int i = 0; i < embedding_vec.size() - 1; i++) {
+    for (int i = 0; i < embedding_vec.size() - 1; i++)
+    {
       arow[i] = static_cast<float>(stod(embedding_vec[i + 1]));
     }
     search_keys.emplace_back(one_search_key);
@@ -436,14 +533,16 @@ void ReadMatFromTsvYT8M(const string &path, vector<vector<float>> &data,
 }
 
 void ReadMatFromTsvYT8M(const string &path, vector<vector<float>> &data,
-                        const int length_limit) {
+                        const int length_limit)
+{
   ifstream infile;
   string bline;
   string delim = ",";
   int numCols = 0;
   infile.open(path, ios::in);
   getline(infile, bline, '\n');
-  if (getline(infile, bline, '\n')) {
+  if (getline(infile, bline, '\n'))
+  {
     vector<string> ret;
     Split(bline, delim, &ret);
     numCols = ret.size();
@@ -453,12 +552,15 @@ void ReadMatFromTsvYT8M(const string &path, vector<vector<float>> &data,
   cout << "# of columns: " << numCols << endl;
 
   int counter = 0;
-  if (length_limit == -1) counter = -9999999;
+  if (length_limit == -1)
+    counter = -9999999;
   infile.open(path, ios::in);
   string delim_embed = " ";
 
-  while (getline(infile, bline, '\n')) {
-    if (counter >= length_limit) break;
+  while (getline(infile, bline, '\n'))
+  {
+    if (counter >= length_limit)
+      break;
     counter++;
 
     vector<string> ret;
@@ -471,7 +573,8 @@ void ReadMatFromTsvYT8M(const string &path, vector<vector<float>> &data,
     vector<float> arow(1024);
     Split(embedding_str, delim_embed, &embedding_vec);
     assert(embedding_vec.size() == 1024);
-    for (int i = 0; i < embedding_vec.size() - 1; i++) {
+    for (int i = 0; i < embedding_vec.size() - 1; i++)
+    {
       arow[i] = static_cast<float>(stod(embedding_vec[i + 1]));
     }
     data.emplace_back(arow);
@@ -481,46 +584,83 @@ void ReadMatFromTsvYT8M(const string &path, vector<vector<float>> &data,
 }
 
 void ReadGroundtruthQuery(vector<vector<int>> &gt,
-                          vector<std::pair<int, int>> &query_ranges,
-                          vector<int> &query_ids, string gt_path) {
-  ifstream infile;
-  string bline;
-  string delim = ",";
-  string space_delim = " ";
+                          vector<std::pair<int, int>> &query_ranges, std::vector<int> &query_fracs,
+                          vector<int> &query_ids, string range_path, string gt_path)
+{
+  // ifstream infile_range;
+  // ifstream infile_gt;
+  for (int frac_i = 0; frac_i <= 17; frac_i++)
+  {
+    cout << "range_path: " << range_path + "/" + std::to_string(frac_i) + ".bin" << endl;
+    cout << "gt_path: " << gt_path + "/" + std::to_string(frac_i) + ".bin" << endl;
+    std::ifstream infile_range(range_path + "/" + std::to_string(frac_i) + ".bin", std::ios::binary);
+    std::ifstream infile_gt(gt_path + "/" + std::to_string(frac_i) + ".bin", std::ios::binary);
+    assert(infile_range.is_open());
+    assert(infile_gt.is_open());
+    int counter = 0;
+    if (infile_range.is_open())
+    {
+      // infile_range.seekg(0, std::ios::end);
+      // int size = infile_range.tellg();
+      // printf("size=%d \n", size);
+      infile_range.seekg(0, std::ios::beg);
+      int pair[2]; // 用于存储每个数对
+      std::pair<int, int> one_range;
+      for (int i = 0; i < 1000; ++i)
+      {
 
-  int numCols = 0;
-  infile.open(gt_path, ios::in);
-  assert(infile.is_open());
-
-  int counter = 0;
-  while (getline(infile, bline, '\n')) {
-    counter++;
-    vector<int> one_gt;
-    std::pair<int, int> one_range;
-    int one_id;
-    vector<string> ret;
-    Split(bline, delim, &ret);
-    one_id = std::stoi(ret[0]);
-    one_range.first = std::stoi(ret[1]);
-    one_range.second = std::stoi(ret[2]);
-    vector<string> str_gt;
-    Split(ret[7], space_delim, &str_gt);
-    str_gt.pop_back();
-    for (auto ele : str_gt) {
-      one_gt.emplace_back(std::stoi(ele));
+        infile_range.read(reinterpret_cast<char *>(pair), sizeof(pair)); // 读取每个数对
+        // if (frac_i == 0)
+        //   cout << "Range " << i + 1 << ": " << pair[0] << ", " << pair[1] << endl;
+        one_range.first = pair[0];
+        one_range.second = pair[1];
+        query_ranges.emplace_back(one_range);
+        query_ids.emplace_back(counter++);
+        query_fracs.emplace_back(frac_i);
+      }
     }
-    gt.emplace_back(one_gt);
-    query_ranges.emplace_back(one_range);
-    query_ids.emplace_back(one_id);
+    if (infile_gt.is_open())
+    {
+      infile_gt.seekg(0, std::ios::beg);
+      for (int i = 0; i < 1000; ++i)
+      {
+        vector<int> one_gt;
+        int n;
+        infile_gt.read(reinterpret_cast<char *>(&n), sizeof(n));
+        // cout << "n = " << n << endl;
+        // if (frac_i == 0)
+        //   cout << "gt " << i + 1 << ": ";
+        for (int j = 0; j < n; ++j)
+        {
+          int a_gt;
+          infile_gt.read(reinterpret_cast<char *>(&a_gt), sizeof(a_gt));
+          one_gt.emplace_back(a_gt);
+          // if (frac_i == 0)
+          //   cout << a_gt << " ";
+          if (a_gt < query_ranges[frac_i * 1000 + i].first || a_gt > query_ranges[frac_i * 1000 + i].second)
+          {
+            cout << "gt out of range: idx=" << frac_i * 1000 + i << ", query_range=[" << query_ranges[frac_i * 1000 + i].first << ", " << query_ranges[frac_i * 1000 + i].second << "], gt_id=" << a_gt << endl;
+            exit(-1);
+          }
+        }
+        // if (frac_i == 0)
+        //   cout << endl;
+        gt.emplace_back(one_gt);
+      }
+    }
   }
 }
 
-void fvecs2csv(const string &output_path, const vector<vector<float>> &nodes) {
+void fvecs2csv(const string &output_path, const vector<vector<float>> &nodes)
+{
   std::ofstream file;
   file.open(output_path, std::ios_base::app);
-  for (auto row : nodes) {
-    if (file) {
-      for (auto ele : row) {
+  for (auto row : nodes)
+  {
+    if (file)
+    {
+      for (auto ele : row)
+      {
         file << ele << " ";
       }
       file << "\n";
@@ -531,26 +671,44 @@ void fvecs2csv(const string &output_path, const vector<vector<float>> &nodes) {
 
 // load data and querys
 void ReadDataWrapper(const string &dataset, string &dataset_path,
-                     vector<vector<float>> &raw_data, const int data_size) {
+                     vector<vector<float>> &raw_data, const int data_size)
+{
   raw_data.clear();
   if (dataset == "glove" || dataset == "glove25" || dataset == "glove50" ||
-      dataset == "glove100" || dataset == "glove200") {
+      dataset == "glove100" || dataset == "glove200")
+  {
     ReadMatFromTxtTwitter(dataset_path, raw_data, data_size);
-  } else if (dataset == "ml25m") {
+  }
+  else if (dataset == "ml25m")
+  {
     ReadMatFromTxt(dataset_path, raw_data, data_size);
-  } else if (dataset == "sift") {
+  }
+  else if (dataset == "sift")
+  {
     raw_data = ReadTopN(dataset_path, "bvecs", data_size);
-  } else if (dataset == "biggraph") {
+  }
+  else if (dataset == "biggraph")
+  {
     ReadMatFromTsv(dataset_path, raw_data, data_size);
-  } else if (dataset == "local") {
+  }
+  else if (dataset == "local")
+  {
     raw_data = ReadTopN(dataset_path, "fvecs", data_size);
-  } else if (dataset == "deep") {
+  }
+  else if (dataset == "deep")
+  {
     raw_data = ReadTopN(dataset_path, "fvecs", data_size);
-  } else if (dataset == "deep10m") {
+  }
+  else if (dataset == "deep10m")
+  {
     raw_data = ReadTopN(dataset_path, "fvecs", data_size);
-  } else if (dataset == "yt8m") {
+  }
+  else if (dataset == "yt8m")
+  {
     ReadMatFromTsvYT8M(dataset_path, raw_data, data_size);
-  } else {
+  }
+  else
+  {
     std::cerr << "Wrong Datset!" << endl;
     assert(false);
   }

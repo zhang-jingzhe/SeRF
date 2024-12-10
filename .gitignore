@@ -2,6 +2,6 @@
 
 build
 build/*
-
+exp
 .vscode/*
 .vscode

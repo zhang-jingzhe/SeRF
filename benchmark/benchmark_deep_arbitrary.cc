@@ -77,12 +77,13 @@ int main(int argc, char **argv)
   string dataset_path = "";
   string method = "";
   string query_path = "";
-  string groundtruth_path = "";
-  vector<int> index_k_list = {16};
-  vector<int> ef_construction_list = {256};
+  string range_path = "/root/data/ranges/intrng10k_1000000";
+  string groundtruth_path = "/root/data/gt/gt_sift_k10";
+  vector<int> index_k_list = {8};
+  vector<int> ef_construction_list = {100};
   int query_num = 1000;
-  int query_k = 100;
-  vector<int> ef_max_list = {500};
+  int query_k = 10;
+  vector<int> ef_max_list = {300};
 
   string indexk_str = "";
   string ef_con_str = "";
@@ -113,12 +114,16 @@ int main(int argc, char **argv)
 
   DataWrapper data_wrapper(query_num, query_k, dataset, data_size);
   data_wrapper.readData(dataset_path, query_path);
-  data_wrapper.frac_num = 1;
+  data_wrapper.frac_num = 18;
   // Generate groundtruth
-  data_wrapper.generateRangeFilteringQueriesAndGroundtruthBenchmark(false);
+  // data_wrapper.generateRangeFilteringQueriesAndGroundtruthBenchmark(false);
   // Or you can load groundtruth from the given path
-  // data_wrapper.LoadGroundtruth(groundtruth_path);
-
+  data_wrapper.LoadGroundtruth(range_path, groundtruth_path);
+  cout << "data_wrapper.groundtruth.size: " << data_wrapper.groundtruth.size() << endl;
+  cout << "data_wrapper.query_ranges.size: " << data_wrapper.query_ranges.size() << endl;
+  cout << "data_wrapper.query_fracs.size: " << data_wrapper.query_fracs.size() << endl;
+  cout << "data_wrapper.query_ids.size: " << data_wrapper.query_ids.size() << endl;
+  cout << "data_wrapper.querys.size: " << data_wrapper.querys.size() << endl;
   assert(data_wrapper.query_ids.size() == data_wrapper.query_ranges.size());
 
   // vector<int> searchef_para_range_list = {16, 64, 256};
@@ -191,6 +196,11 @@ int main(int argc, char **argv)
                     data_wrapper.query_ranges.at(idx));
                 search_info.precision =
                     countPrecision(data_wrapper.groundtruth.at(idx), res);
+                // cout << "groundtruth at idx " << idx << ": ";
+                // print_set(data_wrapper.groundtruth.at(idx));
+                // cout << "res: ";
+                // print_set(res);
+                // cout << "search_info.precision: " << search_info.precision << endl;
                 result_recorder[data_wrapper.query_fracs.at(idx)][s_params.search_ef].first +=
                     search_info.precision;
                 result_recorder[data_wrapper.query_fracs.at(idx)][s_params.search_ef].second +=
@@ -228,7 +238,7 @@ void write_to_csv(const DataWrapper &data_wrapper,
   for (const auto &range_entry : result_recorder)
   {
     int range = range_entry.first; // 当前range
-    std::string filename = "/root/SeRF/exp/result/serf_" + std::to_string(range) + ".csv";
+    std::string filename = "/root/SeRF/exp/result/" + std::to_string(range) + ".csv";
 
     std::ofstream file(filename);
     // file << "search_ef,fa,fb,fc,fd\n";

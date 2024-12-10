@@ -63,7 +63,7 @@ public:
       MAX_POS,
       SMALL_LEFT_POS
     };
-    Recursion_Type_t recursion_type = Recursion_Type_t::MAX_POS;
+    Recursion_Type_t recursion_type = Recursion_Type_t::MIN_POS;
     IndexParams()
         : K(default_K),
           ef_construction(default_ef_construction),

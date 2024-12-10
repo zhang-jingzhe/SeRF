@@ -27,43 +27,47 @@ using std::string;
 using std::vector;
 
 // Interface (abstract basic class) of iterative reader
-class I_ItrReader {
- public:
+class I_ItrReader
+{
+public:
   virtual ~I_ItrReader() {}
   virtual bool IsEnd() = 0;
   virtual std::vector<float> Next() = 0;
 };
 
 // Iterative reader for fvec file
-class FvecsItrReader : I_ItrReader {
- public:
+class FvecsItrReader : I_ItrReader
+{
+public:
   FvecsItrReader(std::string filename);
   bool IsEnd();
   std::vector<float> Next();
 
- private:
-  FvecsItrReader();  // prohibit default construct
+private:
+  FvecsItrReader(); // prohibit default construct
   std::ifstream ifs;
-  std::vector<float> vec;  // store the next vec
+  std::vector<float> vec; // store the next vec
   bool eof_flag;
 };
 
 // Iterative reader for bvec file
-class BvecsItrReader : I_ItrReader {
- public:
+class BvecsItrReader : I_ItrReader
+{
+public:
   BvecsItrReader(std::string filename);
   bool IsEnd();
-  std::vector<float> Next();  // Read bvec, but return vec<float>
- private:
-  BvecsItrReader();  // prohibit default construct
+  std::vector<float> Next(); // Read bvec, but return vec<float>
+private:
+  BvecsItrReader(); // prohibit default construct
   std::ifstream ifs;
-  std::vector<float> vec;  // store the next vec
+  std::vector<float> vec; // store the next vec
   bool eof_flag;
 };
 
 // Proxy class
-class ItrReader {
- public:
+class ItrReader
+{
+public:
   // ext must be "fvecs" or "bvecs"
   ItrReader(std::string filename, std::string ext);
   ~ItrReader();
@@ -71,7 +75,7 @@ class ItrReader {
   bool IsEnd();
   std::vector<float> Next();
 
- private:
+private:
   ItrReader();
   I_ItrReader *m_reader;
 };
@@ -95,7 +99,7 @@ void ReadMatFromTsv(const std::string &path,
 void ReadDataWrapper(vector<vector<float>> &raw_data, vector<int> &search_keys,
                      const string &dataset, string &dataset_path,
                      const int item_num);
-                     
+
 void ReadDataWrapper(const string &dataset, string &dataset_path,
                      vector<vector<float>> &raw_data, const int data_size,
                      string &query_path, vector<vector<float>> &querys,
@@ -109,5 +113,5 @@ void ReadMatFromTsvYT8M(const string &path, vector<vector<float>> &data,
                         vector<int> &search_keys, const int length_limit);
 
 void ReadGroundtruthQuery(std::vector<std::vector<int>> &gt,
-                          std::vector<std::pair<int, int>> &query_ranges,
-                          std::vector<int> &query_ids, std::string gt_path);
+                          std::vector<std::pair<int, int>> &query_ranges, std::vector<int> &query_fracs,
+                          std::vector<int> &query_ids, std::string range_path, std::string gt_path);

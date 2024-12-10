@@ -50,7 +50,7 @@ public:
                                                      const string path = "");
     void generateHalfBoundedQueriesAndGroundtruth(bool is_save = false,
                                                   const string path = "");
-    void LoadGroundtruth(const string &gt_path);
+    void LoadGroundtruth(const string &range_path, const string &gt_path);
 
     void generateRangeFilteringQueriesAndGroundtruthScalability(
         bool is_save = false, const string path = "");
