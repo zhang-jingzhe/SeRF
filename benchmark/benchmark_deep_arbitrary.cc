@@ -79,11 +79,11 @@ int main(int argc, char **argv)
   string query_path = "";
   string range_path = "/root/data/ranges/intrng10k_1000000";
   string groundtruth_path = "/root/data/gt/gt_sift_k10";
-  vector<int> index_k_list = {8};
+  vector<int> index_k_list = {64};
   vector<int> ef_construction_list = {100};
   int query_num = 1000;
   int query_k = 10;
-  vector<int> ef_max_list = {300};
+  vector<int> ef_max_list = {100};
 
   string indexk_str = "";
   string ef_con_str = "";

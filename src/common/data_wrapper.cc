@@ -258,7 +258,7 @@ void DataWrapper::LoadGroundtruth(const string &range_path, const string &gt_pat
   this->query_ids.clear();
   cout << "Loading Groundtruth from" << range_path << " " << gt_path << "...";
   ReadGroundtruthQuery(this->groundtruth, this->query_ranges, this->query_fracs, this->query_ids, range_path, gt_path);
-  cout << "Done!" << endl;
+  cout << "     Done!" << endl;
 }
 
 void DataWrapper::generateRangeFilteringQueriesAndGroundtruthScalability(

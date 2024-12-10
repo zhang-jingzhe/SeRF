@@ -591,8 +591,8 @@ void ReadGroundtruthQuery(vector<vector<int>> &gt,
   // ifstream infile_gt;
   for (int frac_i = 0; frac_i <= 17; frac_i++)
   {
-    cout << "range_path: " << range_path + "/" + std::to_string(frac_i) + ".bin" << endl;
-    cout << "gt_path: " << gt_path + "/" + std::to_string(frac_i) + ".bin" << endl;
+    // cout << "range_path: " << range_path + "/" + std::to_string(frac_i) + ".bin" << endl;
+    // cout << "gt_path: " << gt_path + "/" + std::to_string(frac_i) + ".bin" << endl;
     std::ifstream infile_range(range_path + "/" + std::to_string(frac_i) + ".bin", std::ios::binary);
     std::ifstream infile_gt(gt_path + "/" + std::to_string(frac_i) + ".bin", std::ios::binary);
     assert(infile_range.is_open());
